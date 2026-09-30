@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spot Holdings Monitor</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: status line, KPI strip, one holdings ledger (the working surface), editor panel under it */
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --sunk:#eef1f5; --fg:#161e29; --muted:#5a6575; --line:#dde2ea;
+  --accent:#2f5bd3; --accent-fg:#ffffff; --gain:#11804a; --loss:#c23a2b; --warn:#9a6200; --warn-bg:#fbf0dc;
+  --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1319; --surface:#161c24; --sunk:#1c232d; --fg:#e6eaf0; --muted:#98a3b3; --line:#2a323d;
+  --accent:#7d9cf0; --accent-fg:#0f1319; --gain:#4cc98a; --loss:#f07a6a; --warn:#e8b04f; --warn-bg:#33280f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1319; --surface:#161c24; --sunk:#1c232d; --fg:#e6eaf0; --muted:#98a3b3; --line:#2a323d;
+  --accent:#7d9cf0; --accent-fg:#0f1319; --gain:#4cc98a; --loss:#f07a6a; --warn:#e8b04f; --warn-bg:#33280f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:grid;gap:20px}
+h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-.01em}
+h2{font-size:16px;font-weight:600;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.num,td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--gain)} .neg{color:var(--loss)}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 20px}
+.top .title{display:grid;gap:4px;margin-right:auto;min-width:0}
+.live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--gain)} .dot.stale{background:var(--warn)} .dot.bad{background:var(--loss)}
+button{font:inherit;font-size:13px;font-weight:500;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+button.link{border:0;background:none;padding:2px 4px;color:var(--accent)}
+button.danger{color:var(--loss)}
+button:disabled{opacity:.5;cursor:default}
+.banner{background:var(--warn-bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.kpi .l{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .s{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:9px;display:grid}
+.panel-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.panel-head h2{margin-right:auto}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:920px;font-size:13.5px}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk);cursor:pointer;user-select:none}
+th[aria-sort="ascending"]::after{content:" ▲";font-size:9px}
+th[aria-sort="descending"]::after{content:" ▼";font-size:9px}
+th.nosort{cursor:default}
+th:first-child,td:first-child{text-align:left}
+td.coin{font-weight:600}
+td.coin small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+tbody tr:hover{background:var(--sunk)}
+tfoot td{font-weight:600;background:var(--sunk);border-bottom:0}
+.w{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.wbar{width:64px;height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;flex:none}
+.wbar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.na{color:var(--muted)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);display:grid;gap:10px;justify-items:center}
+form.editor{padding:14px;display:grid;gap:12px;border-top:1px solid var(--line);background:var(--sunk)}
+.fields{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+label{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+input{font:inherit;font-family:var(--mono);font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--fg);width:150px}
+input#f-sym{width:100px;text-transform:uppercase}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.msg{font-size:12.5px}
+footer{font-size:12.5px;color:var(--muted);display:grid;gap:4px}
+@media (prefers-reduced-motion:no-preference){.dot.ok{animation:pulse 2.4s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.4}}
+
+body{margin:0;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">
+      <h1 id="h1">Spot Holdings Monitor</h1>
+      <div class="live"><span class="dot" id="dot"></span><span id="liveText">Loading prices…</span></div>
+    </div>
+    <button id="refresh" type="button">Refresh prices</button>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="l">Value now</span><span class="v" id="k-value">—</span><span class="s" id="k-value-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Invested</span><span class="v" id="k-inv">—</span><span class="s" id="k-inv-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Profit / loss</span><span class="v" id="k-pl">—</span><span class="s" id="k-pl-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Last 24 hours</span><span class="v" id="k-24">—</span><span class="s" id="k-24-s">&nbsp;</span></div>
+  </div>
+
+  <section class="panel" aria-labelledby="h-hold">
+    <div class="panel-head">
+      <h2 id="h-hold">Holdings</h2>
+      <span class="muted" id="count"></span>
+    </div>
+    <div class="tablewrap">
+      <table id="tbl">
+        <thead><tr>
+          <th data-k="sym">Coin</th>
+          <th data-k="amount">Amount</th>
+          <th data-k="avg">Avg buy</th>
+          <th data-k="price">Price</th>
+          <th data-k="chg">24h</th>
+          <th data-k="value" aria-sort="descending">Value</th>
+          <th data-k="invested">Invested</th>
+          <th data-k="pl">P/L $</th>
+          <th data-k="plp">P/L %</th>
+          <th data-k="be">To break even</th>
+          <th data-k="weight">Weight</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="foot"></tfoot>
+      </table>
+    </div>
+    <div class="empty" id="empty" hidden></div>
+  </section>
+
+  <footer>
+    <p>Prices from CoinGecko, with Coinbase as a backup for any coin CoinGecko doesn't return. They refresh every minute while this page is open.</p>
+    <p>Holdings come from <code>holdings.json</code> in this site's repository. General information only, not financial advice.</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
