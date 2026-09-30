@@ -1,0 +1,16 @@
+{
+  "title": "Spot Holdings Monitor",
+  "holdings": [
+    { "symbol": "ETH",  "coingecko_id": "ethereum",           "amount": 0.6008,        "invested": 1320 },
+    { "symbol": "NEAR", "coingecko_id": "near",               "amount": 121.98388863,  "invested": 350 },
+    { "symbol": "INJ",  "coingecko_id": "injective-protocol", "amount": 70.32,         "invested": 600 },
+    { "symbol": "LINK", "coingecko_id": "chainlink",          "amount": 13.49736769,   "invested": 200 },
+    { "symbol": "ONDO", "coingecko_id": "ondo-finance",       "amount": 300.951,       "invested": 300 },
+    { "symbol": "ARB",  "coingecko_id": "arbitrum",           "amount": 645.5538,      "invested": 450 },
+    { "symbol": "AVAX", "coingecko_id": "avalanche-2",        "amount": 9.4535472,     "invested": 200 },
+    { "symbol": "HBAR", "coingecko_id": "hedera-hashgraph",   "amount": 750.52385542,  "invested": 200 },
+    { "symbol": "OP",   "coingecko_id": "optimism",           "amount": 612.00738,     "invested": 400 },
+    { "symbol": "SUI",  "coingecko_id": "sui",                "amount": 64,            "invested": 200 },
+    { "symbol": "W",    "coingecko_id": "wormhole",           "amount": 3318.8778,     "invested": 300 }
+  ]
+}
