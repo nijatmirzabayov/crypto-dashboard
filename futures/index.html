@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Futures Positions</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: status line, balance KPIs, period gains, open positions, trade history */
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --sunk:#eef1f5; --fg:#161e29; --muted:#5a6575; --line:#dde2ea;
+  --accent:#2f5bd3; --accent-fg:#ffffff; --gain:#11804a; --loss:#c23a2b; --warn:#9a6200; --warn-bg:#fbf0dc;
+  --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1319; --surface:#161c24; --sunk:#1c232d; --fg:#e6eaf0; --muted:#98a3b3; --line:#2a323d;
+  --accent:#7d9cf0; --accent-fg:#0f1319; --gain:#4cc98a; --loss:#f07a6a; --warn:#e8b04f; --warn-bg:#33280f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1319; --surface:#161c24; --sunk:#1c232d; --fg:#e6eaf0; --muted:#98a3b3; --line:#2a323d;
+  --accent:#7d9cf0; --accent-fg:#0f1319; --gain:#4cc98a; --loss:#f07a6a; --warn:#e8b04f; --warn-bg:#33280f; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:grid;gap:20px}
+h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-.01em}
+h2{font-size:16px;font-weight:600;margin:0}
+p{margin:0}
+a{color:var(--accent)}
+.muted{color:var(--muted)}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--gain)} .neg{color:var(--loss)}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 20px}
+.top .title{display:grid;gap:4px;margin-right:auto;min-width:0}
+.nav{font-size:13px}
+.live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--gain)} .dot.stale{background:var(--warn)} .dot.bad{background:var(--loss)}
+button{font:inherit;font-size:13px;font-weight:500;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.5;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:5px 12px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.banner{background:var(--warn-bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.kpi .l{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .s{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.kpi.hero{border-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:9px;display:grid;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.panel-head h2{margin-right:auto}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk)}
+th:first-child,td:first-child{text-align:left}
+td.l{text-align:left}
+td.sym{font-weight:600}
+td small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;font-family:var(--body)}
+td.notes{white-space:normal;min-width:160px;max-width:280px;text-align:left;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:5px;background:var(--sunk)}
+.tag.long{color:var(--gain)} .tag.short{color:var(--loss)}
+tbody tr:hover{background:var(--sunk)}
+tfoot td{font-weight:600;background:var(--sunk);border-bottom:0}
+tr.current td{background:var(--sunk)}
+.empty{padding:24px 16px;text-align:center;color:var(--muted)}
+footer{font-size:12.5px;color:var(--muted);display:grid;gap:4px}
+@media (prefers-reduced-motion:no-preference){.dot.ok{animation:pulse 2.4s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">
+      <span class="nav"><a href="../">Spot holdings</a> · Futures</span>
+      <h1 id="h1">Futures Positions</h1>
+      <div class="live"><span class="dot" id="dot"></span><span id="liveText">Loading…</span></div>
+    </div>
+    <button id="refresh" type="button">Refresh prices</button>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="kpis">
+    <div class="kpi hero"><span class="l">Current balance</span><span class="v" id="k-bal">—</span><span class="s" id="k-bal-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Change vs start</span><span class="v" id="k-chg">—</span><span class="s" id="k-chg-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Realised P&amp;L</span><span class="v" id="k-real">—</span><span class="s" id="k-real-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Open P&amp;L (unrealised)</span><span class="v" id="k-open">—</span><span class="s" id="k-open-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Total P&amp;L</span><span class="v" id="k-tot">—</span><span class="s" id="k-tot-s">&nbsp;</span></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="l">Today</span><span class="v" id="k-d">—</span><span class="s" id="k-d-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">This week</span><span class="v" id="k-w">—</span><span class="s" id="k-w-s">&nbsp;</span></div>
+    <div class="kpi"><span class="l">This month</span><span class="v" id="k-m">—</span><span class="s" id="k-m-s">&nbsp;</span></div>
+  </div>
+
+  <section class="panel" aria-labelledby="h-open">
+    <div class="panel-head"><h2 id="h-open">Open positions</h2><span class="muted" id="openCount"></span></div>
+    <div class="tablewrap">
+      <table id="openTbl" style="min-width:1050px">
+        <thead><tr>
+          <th>Position</th><th>Side</th><th>Size</th><th>Leverage</th><th>Entry</th><th>Mark price</th>
+          <th>Notional</th><th>Opened</th><th>Held</th><th>Fees</th><th>P&amp;L $</th><th>P&amp;L %</th>
+        </tr></thead>
+        <tbody id="openRows"></tbody>
+        <tfoot id="openFoot"></tfoot>
+      </table>
+    </div>
+    <div class="empty" id="openEmpty" hidden>No open positions.</div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-per">
+    <div class="panel-head">
+      <h2 id="h-per">Gains by period</h2>
+      <div class="seg" role="group" aria-label="Period">
+        <button type="button" data-p="day" aria-pressed="true">Daily</button>
+        <button type="button" data-p="week" aria-pressed="false">Weekly</button>
+        <button type="button" data-p="month" aria-pressed="false">Monthly</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table style="min-width:640px">
+        <thead><tr><th>Period</th><th>Trades closed</th><th>Wins / losses</th><th>Realised</th><th>Incl. open P&amp;L</th><th>% of start</th><th>Balance at end</th></tr></thead>
+        <tbody id="perRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-hist">
+    <div class="panel-head"><h2 id="h-hist">Trade history</h2><span class="muted" id="histCount"></span></div>
+    <div class="tablewrap">
+      <table style="min-width:1300px">
+        <thead><tr>
+          <th>#</th><th>Position</th><th>Side</th><th>Size</th><th>Lev.</th><th>Entry</th><th>Exit</th>
+          <th>Opened</th><th>Closed</th><th>Held</th><th>Fees + funding</th><th>P&amp;L $</th><th>P&amp;L %</th><th>Balance after</th><th>Notes</th>
+        </tr></thead>
+        <tbody id="histRows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="histEmpty" hidden>No closed trades yet. Closed positions will appear here with their full details.</div>
+  </section>
+
+  <footer>
+    <p>Mark prices come from Binance USDT-margined futures, with Bybit, OKX and then CoinGecko spot as backups. They refresh every 30 seconds while this page is open.</p>
+    <p>Balance = starting balance + realised P&amp;L + open P&amp;L. Period gains count trades by their close time; open P&amp;L is counted in the current period. P&amp;L % is the price move times leverage (the return on margin), or the plain price move when no leverage is recorded. Times are shown in your local time zone; weeks start on Monday.</p>
+    <p>Positions come from <code>futures/positions.json</code> in this site's repository. <span id="updated"></span> General information only, not financial advice.</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "title": "Futures Positions",
+  "currency": "USDT",
+  "starting_balance": 764,
+  "start_date": "2026-10-20",
+  "updated": "2026-10-20T08:00:00Z",
+  "deposits": [],
+  "trades": [
+    {
+      "id": 1,
+      "symbol": "STRKUSDT",
+      "coingecko_id": "starknet",
+      "side": "long",
+      "size": 1000,
+      "leverage": null,
+      "entry": 0.5696,
+      "opened": "2026-10-20",
+      "exit": null,
+      "closed": null,
+      "fees": 0,
+      "funding": 0,
+      "notes": "From positions_daily.xlsx"
+    }
+  ]
+}
