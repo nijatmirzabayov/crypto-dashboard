@@ -19,7 +19,8 @@
     const d = v >= 1000 ? 2 : v >= 10 ? 3 : v >= 1 ? 4 : v >= 0.01 ? 5 : 7;
     return "$" + v.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
   };
-  const qty = v => v.toLocaleString("en-US", {maximumFractionDigits: 6});
+  const qty = v => v.toLocaleString("en-US", {maximumFractionDigits: v >= 100 ? 0 : 6});
+  const sizeCell = t => { const c = td(money(notional(t))); c.append(el("small", {}, qty(t.size) + " " + t.symbol.replace(/USDT$/, ""))); return c; };
   const cls = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
   const el = (tag, props = {}, text) => { const e = document.createElement(tag); Object.assign(e, props); if (text != null) e.textContent = text; return e; };
   const td = (text, c = "n") => el("td", {className: c}, text);
@@ -136,8 +137,8 @@
       if (t.notes) c0.append(el("small", {}, t.notes));
       const sd = el("td"); sd.append(sideTag(t));
       const ret = retPct(t, t.pnl);
-      tr.append(c0, sd, td(qty(t.size)), td(t.leverage ? t.leverage + "×" : "—"), td(px(t.entry)),
-        td(px(t.mark), "n" + (t.mark == null ? " muted" : "")), td(money(notional(t))),
+      tr.append(c0, sd, sizeCell(t), td(t.leverage ? t.leverage + "×" : "—"), td(px(t.entry)),
+        td(px(t.mark), "n" + (t.mark == null ? " muted" : "")), td(money(t.mark == null ? null : t.mark * t.size)),
         td(fmtTime(t.openedP)), td(held(t.openedP && t.openedP.t, now)), td(money(t.fees - t.funding)),
         td(money(t.pnl, true), "n " + cls(t.pnl)), td(pct(ret), "n " + cls(ret)));
       tb.append(tr);
@@ -145,7 +146,7 @@
     if (s.open.length > 1) {
       const tr = el("tr");
       tr.append(td("Total", ""), el("td"), el("td"), el("td"), el("td"), el("td"),
-        td(money(s.open.reduce((x, t) => x + notional(t), 0))), el("td"), el("td"), el("td"),
+        td(s.allPriced ? money(s.open.reduce((x, t) => x + t.mark * t.size, 0)) : "—"), el("td"), el("td"), el("td"),
         td(s.allPriced ? money(s.unreal, true) : "—", "n " + cls(s.unreal)), el("td"));
       $("openFoot").append(tr);
     }
@@ -187,7 +188,7 @@
       const tr = el("tr");
       const sd = el("td"); sd.append(sideTag(t));
       const ret = retPct(t, t.pnl);
-      tr.append(td(String(t.id ?? "")), td(t.symbol, "sym"), sd, td(qty(t.size)), td(t.leverage ? t.leverage + "×" : "—"),
+      tr.append(td(String(t.id ?? "")), td(t.symbol, "sym"), sd, sizeCell(t), td(t.leverage ? t.leverage + "×" : "—"),
         td(px(t.entry)), td(px(t.exit)), td(fmtTime(t.openedP)), td(fmtTime(t.closedP)),
         td(held(t.openedP && t.openedP.t, t.closedP.t)), td(money(t.fees - t.funding)),
         td(money(t.pnl, true), "n " + cls(t.pnl)), td(pct(ret), "n " + cls(ret)), td(money(t.balAfter)),
@@ -262,7 +263,8 @@
       trades = (d.trades || []).map(t => ({
         id: t.id, symbol: String(t.symbol).toUpperCase(), coingecko_id: t.coingecko_id || "",
         side: String(t.side).toLowerCase() === "short" ? "short" : "long",
-        size: Number(t.size), entry: Number(t.entry), exit: t.exit == null ? null : Number(t.exit),
+        // Size is in USDT at entry (size_usdt); a plain size is a coin quantity.
+        size: t.size_usdt != null ? Number(t.size_usdt) / Number(t.entry) : Number(t.size), entry: Number(t.entry), exit: t.exit == null ? null : Number(t.exit),
         leverage: Number(t.leverage) || null, fees: Number(t.fees) || 0, funding: Number(t.funding) || 0,
         openedP: parseTime(t.opened), closedP: t.exit == null ? null : parseTime(t.closed), notes: t.notes || ""
       })).filter(t => t.symbol && isFinite(t.size) && isFinite(t.entry));

@@ -8,4 +8,4 @@ Prices come from the free CoinGecko API, with Coinbase as a backup, and refresh 
 
 ## Futures dashboard
 
-`futures/` is a second page at https://nijatmirzabayov.github.io/crypto-dashboard/futures/. Trades live in `futures/positions.json`: `starting_balance`, optional `deposits` (`{time, amount, note}`), and `trades` with `symbol`, `side` (long/short), `size` (coin quantity), `entry`, `opened`, and once closed `exit` and `closed`. Optional: `leverage`, `fees`, `funding`, `notes`, `coingecko_id`. Times are ISO 8601; a bare date (`2026-10-20`) shows as a date only.
+`futures/` is a second page at https://nijatmirzabayov.github.io/crypto-dashboard/futures/. Trades live in `futures/positions.json`: `starting_balance`, optional `deposits` (`{time, amount, note}`), and `trades` with `symbol`, `side` (long/short), `size_usdt` (position size in USDT at entry; or `size` as a coin quantity), `entry`, `opened`, and once closed `exit` and `closed`. Optional: `leverage`, `fees`, `funding`, `notes`, `coingecko_id`. Times are ISO 8601; a bare date (`2026-10-20`) shows as a date only.
