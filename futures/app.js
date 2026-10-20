@@ -263,7 +263,7 @@
       trades = (d.trades || []).map(t => ({
         id: t.id, symbol: String(t.symbol).toUpperCase(), coingecko_id: t.coingecko_id || "",
         side: String(t.side).toLowerCase() === "short" ? "short" : "long",
-        // Size is in USDT at entry (size_usdt); a plain size is a coin quantity.
+        // Size is in USDT at entry (size_usdt); a plain size is a coin quantity, kept for pages still running older code.
         size: t.size_usdt != null ? Number(t.size_usdt) / Number(t.entry) : Number(t.size), entry: Number(t.entry), exit: t.exit == null ? null : Number(t.exit),
         leverage: Number(t.leverage) || null, fees: Number(t.fees) || 0, funding: Number(t.funding) || 0,
         openedP: parseTime(t.opened), closedP: t.exit == null ? null : parseTime(t.closed), notes: t.notes || ""

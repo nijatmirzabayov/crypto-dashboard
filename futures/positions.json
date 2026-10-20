@@ -12,6 +12,7 @@
       "coingecko_id": "starknet",
       "side": "long",
       "size_usdt": 1000,
+      "size": 17556.18,
       "leverage": null,
       "entry": 0.05696,
       "opened": "2026-10-20",
