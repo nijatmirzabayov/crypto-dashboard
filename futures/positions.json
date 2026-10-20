@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-20T08:00:00Z",
+  "updated": "2026-10-20T08:05:00Z",
   "deposits": [],
   "trades": [
     {
@@ -13,7 +13,7 @@
       "side": "long",
       "size": 1000,
       "leverage": null,
-      "entry": 0.5696,
+      "entry": 0.05696,
       "opened": "2026-10-20",
       "exit": null,
       "closed": null,
