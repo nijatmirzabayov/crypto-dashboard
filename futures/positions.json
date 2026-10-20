@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-20T08:07:00Z",
+  "updated": "2026-10-20T08:13:00Z",
   "deposits": [],
   "trades": [
     {
@@ -12,9 +12,9 @@
       "coingecko_id": "starknet",
       "side": "long",
       "size_usdt": 1000,
-      "size": 17556.18,
+      "size": 17869.91,
       "leverage": null,
-      "entry": 0.05696,
+      "entry": 0.05596,
       "opened": "2026-10-20",
       "exit": null,
       "closed": null,

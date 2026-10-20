@@ -200,13 +200,15 @@
   function renderLive() {
     const dot = $("dot"), t = $("liveText"), banner = $("banner");
     const open = trades.filter(x => !x.closedP);
-    banner.hidden = !lastError; if (lastError) banner.textContent = lastError;
+    const notBinance = open.filter(x => prices.has(x.symbol) && prices.get(x.symbol).src !== "Binance mark").length;
+    const notice = lastError || (notBinance ? "Binance couldn't be reached from this browser, so " + notBinance + " position" + (notBinance > 1 ? "s use" : " uses") + " another exchange's mark price, which can differ slightly." : null);
+    banner.hidden = !notice; if (notice) banner.textContent = notice;
     if (!open.length) { dot.className = "dot ok"; t.textContent = "No open positions, nothing to price"; return; }
     const ts = open.map(x => prices.get(x.symbol)).filter(Boolean).map(p => p.ts);
     if (!ts.length) { dot.className = "dot " + (lastError ? "bad" : ""); t.textContent = loading ? "Loading prices…" : "Live prices unavailable"; return; }
     const last = Math.max(...ts), missing = open.filter(x => !prices.has(x.symbol)).length;
     const srcs = [...new Set(open.map(x => prices.get(x.symbol)).filter(Boolean).map(p => p.src))].join(", ");
-    dot.className = "dot " + (missing || Date.now() - last > 300000 ? "stale" : "ok");
+    dot.className = "dot " + (missing || Date.now() - last > 60000 ? "stale" : "ok");
     t.textContent = "Mark prices as of " + new Date(last).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit"}) + " · " + srcs +
       (missing ? " · " + missing + " without a price" : "");
   }
@@ -220,36 +222,59 @@
     } finally { clearTimeout(t); }
   }
 
-  // Futures mark price first; each source is tried in order until one answers.
-  const SOURCES = [
-    ["Binance", async sym => parseFloat((await fetchJSON("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=" + sym)).markPrice)],
-    ["Bybit", async sym => parseFloat((await fetchJSON("https://api.bybit.com/v5/market/tickers?category=linear&symbol=" + sym)).result.list[0].markPrice)],
-    ["OKX", async sym => parseFloat((await fetchJSON("https://www.okx.com/api/v5/public/mark-price?instType=SWAP&instId=" + sym.replace(/USDT$/, "") + "-USDT-SWAP")).data[0].markPx)],
+  // Binance USDT-M mark price is the source of truth: a WebSocket stream (no CORS limits, 1s updates),
+  // with the REST endpoint as a check. Bybit and OKX mark prices only stand in when Binance can't be reached.
+  const BINANCE = "Binance mark";
+  const FALLBACKS = [
+    ["Bybit mark", async sym => parseFloat((await fetchJSON("https://api.bybit.com/v5/market/tickers?category=linear&symbol=" + sym)).result.list[0].markPrice)],
+    ["OKX mark", async sym => parseFloat((await fetchJSON("https://www.okx.com/api/v5/public/mark-price?instType=SWAP&instId=" + sym.replace(/USDT$/, "") + "-USDT-SWAP")).data[0].markPx)],
   ];
+  const binanceFresh = sym => { const p = prices.get(sym); return p && p.src === BINANCE && Date.now() - p.ts < 15000; };
+
+  let ws = null, wsKey = "", renderQueued = false;
+  function queueRender() { if (!renderQueued) { renderQueued = true; setTimeout(() => { renderQueued = false; render(); }, 1000); } }
+  function connectStream() {
+    const syms = [...new Set(trades.filter(t => !t.closedP).map(t => t.symbol))];
+    const key = syms.join(",");
+    if (ws && wsKey === key && ws.readyState <= 1) return;
+    if (ws) { ws.onclose = null; ws.close(); ws = null; }
+    wsKey = key;
+    if (!syms.length) return;
+    try {
+      ws = new WebSocket("wss://fstream.binance.com/stream?streams=" + syms.map(x => x.toLowerCase() + "@markPrice@1s").join("/"));
+    } catch (e) { return; }
+    ws.onmessage = ev => {
+      try {
+        const d = JSON.parse(ev.data).data, v = parseFloat(d.p);
+        if (d && d.s && isFinite(v) && v > 0) { prices.set(d.s, {price: v, ts: Date.now(), src: BINANCE}); queueRender(); }
+      } catch (e) {}
+    };
+    ws.onclose = () => { ws = null; setTimeout(connectStream, 5000); };
+  }
 
   async function priceOf(t) {
-    for (const [src, f] of SOURCES) {
-      try { const v = await f(encodeURIComponent(t.symbol)); if (isFinite(v) && v > 0) return {price: v, ts: Date.now(), src}; } catch (e) {}
-    }
-    if (t.coingecko_id) {
-      try {
-        const d = await fetchJSON("https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=" + encodeURIComponent(t.coingecko_id));
-        const v = d[t.coingecko_id] && d[t.coingecko_id].usd;
-        if (v > 0) return {price: v, ts: Date.now(), src: "CoinGecko spot"};
-      } catch (e) {}
+    const sym = encodeURIComponent(t.symbol);
+    try {
+      const v = parseFloat((await fetchJSON("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=" + sym)).markPrice);
+      if (isFinite(v) && v > 0) return {price: v, ts: Date.now(), src: BINANCE};
+    } catch (e) {}
+    if (binanceFresh(t.symbol)) return prices.get(t.symbol);
+    for (const [src, f] of FALLBACKS) {
+      try { const v = await f(sym); if (isFinite(v) && v > 0) return {price: v, ts: Date.now(), src}; } catch (e) {}
     }
     return null;
   }
 
   async function loadPrices() {
     const open = trades.filter(t => !t.closedP);
+    connectStream();
     if (!open.length || loading) { render(); return; }
     loading = true; renderLive();
     const b = $("refresh"); b.disabled = true; b.textContent = "Refreshing…";
-    const syms = [...new Map(open.map(t => [t.symbol, t])).values()];
+    const syms = [...new Map(open.map(t => [t.symbol, t])).values()].filter(t => !binanceFresh(t.symbol));
     const got = await Promise.all(syms.map(async t => [t.symbol, await priceOf(t)]));
     let failed = 0;
-    for (const [sym, p] of got) { if (p) prices.set(sym, p); else failed++; }
+    for (const [sym, p] of got) { if (p) { if (!binanceFresh(sym) || p.src === BINANCE) prices.set(sym, p); } else failed++; }
     lastError = failed ? "Couldn't get a live price for " + failed + " position" + (failed > 1 ? "s" : "") + (prices.size ? "; showing the last price received." : ". Balance shows realised results only until prices load.") : null;
     loading = false; b.disabled = false; b.textContent = "Refresh prices";
     render();
