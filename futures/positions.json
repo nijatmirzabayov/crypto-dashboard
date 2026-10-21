@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-20T08:13:00Z",
+  "updated": "2026-10-21T19:16:00Z",
   "deposits": [],
   "trades": [
     {
@@ -16,8 +16,8 @@
       "leverage": null,
       "entry": 0.05596,
       "opened": "2026-10-20",
-      "exit": null,
-      "closed": null,
+      "exit": 0.05601,
+      "closed": "2026-10-20",
       "fees": 0,
       "funding": 0,
       "notes": "From positions_daily.xlsx"
