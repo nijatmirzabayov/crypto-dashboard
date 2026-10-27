@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-21T19:16:00Z",
+  "updated": "2026-10-27T14:17:00Z",
   "deposits": [],
   "trades": [
     {
@@ -21,6 +21,36 @@
       "fees": 0,
       "funding": 0,
       "notes": "From positions_daily.xlsx"
+    },
+    {
+      "id": 2,
+      "symbol": "CAPUSDT",
+      "side": "short",
+      "size_usdt": 500,
+      "size": 5000,
+      "leverage": null,
+      "entry": 0.1,
+      "opened": "2026-10-25",
+      "exit": 0.097244,
+      "closed": "2026-10-25",
+      "fees": 0,
+      "funding": 0,
+      "notes": "Approximate prices (around 0.1); realised profit +13.78 USDT as reported"
+    },
+    {
+      "id": 3,
+      "symbol": "CAPUSDT",
+      "side": "short",
+      "size_usdt": 500,
+      "size": 5000,
+      "leverage": null,
+      "entry": 0.1,
+      "opened": "2026-10-25",
+      "exit": 0.096178,
+      "closed": "2026-10-25",
+      "fees": 0,
+      "funding": 0,
+      "notes": "Approximate prices (around 0.1); realised profit +19.11 USDT as reported"
     }
   ]
 }
