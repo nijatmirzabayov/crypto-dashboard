@@ -87,7 +87,11 @@
     const pricedOpen = open.filter(t => t.pnl != null);
     const unreal = pricedOpen.reduce((s, t) => s + t.pnl, 0);
     const base = start + depTotal;
-    return {start, deposits, depTotal, closed, open, realised, unreal, base,
+    // Percentages are measured against the capital put in; withdrawals don't shrink it.
+    const added = deposits.reduce((s, x) => s + Math.max(0, x.amount), 0);
+    const withdrawn = -deposits.reduce((s, x) => s + Math.min(0, x.amount), 0);
+    const pctBase = start + added;
+    return {start, deposits, depTotal, added, withdrawn, pctBase, closed, open, realised, unreal, base,
       allPriced: pricedOpen.length === open.length, wallet: base + realised, equity: base + realised + unreal};
   }
 
@@ -99,11 +103,12 @@
 
     const set = (id, text, c) => { const e = $(id); e.textContent = text; if (c != null) e.className = c; };
     set("k-bal", has ? money(s.equity) : money(s.wallet) + "*");
-    set("k-bal-s", has ? "Wallet " + money(s.wallet) + " · start " + money(s.start) : "* waiting for live prices");
+    set("k-bal-s", (has ? (s.open.length ? "Wallet " + money(s.wallet) + " · " : "") + "start " + money(s.start) : "* waiting for live prices") +
+      (s.added ? " · added " + money(s.added) : "") + (s.withdrawn ? " · withdrawn " + money(s.withdrawn) : ""));
     const tot = s.realised + (has ? s.unreal : 0);
-    const chg = s.base ? tot / s.base * 100 : null;
+    const chg = s.pctBase ? tot / s.pctBase * 100 : null;
     set("k-chg", pct(chg), "v " + cls(tot));
-    set("k-chg-s", "from " + money(s.base) + (s.depTotal ? " incl. deposits" : " starting"));
+    set("k-chg-s", "from " + money(s.pctBase) + (s.added ? " incl. deposits" : " starting"));
     set("k-real", money(s.realised, true), "v " + cls(s.realised));
     set("k-real-s", s.closed.length + " closed trade" + (s.closed.length === 1 ? "" : "s"));
     set("k-open", s.open.length ? (has ? money(s.unreal, true) : "—") : money(0), "v " + cls(has ? s.unreal : 0));
@@ -116,7 +121,7 @@
       const r = s.closed.filter(t => t.closedP.t >= a).reduce((x, t) => x + t.pnl, 0);
       const g = r + (has ? s.unreal : 0);
       set(id, has ? money(g, true) : "—", "v " + cls(g));
-      set(id + "-s", (has ? pct(s.base ? g / s.base * 100 : null) : "") + " · realised " + money(r, true));
+      set(id + "-s", (has ? pct(s.pctBase ? g / s.pctBase * 100 : null) : "") + " · realised " + money(r, true));
     }
 
     renderOpen(s, now);
@@ -172,7 +177,7 @@
       const c0 = el("td", {}, periodLabel(k, period));
       if (isCur) c0.append(el("small", {}, "current, so far"));
       tr.append(c0, td(String(ts.length)), td(wins + " / " + losses), td(money(r, true), "n " + cls(r)),
-        td(money(incl, true), "n " + cls(incl)), td(pct(incl == null || !s.base ? null : incl / s.base * 100), "n " + cls(incl)),
+        td(money(incl, true), "n " + cls(incl)), td(pct(incl == null || !s.pctBase ? null : incl / s.pctBase * 100), "n " + cls(incl)),
         td(isCur && !s.allPriced ? "—" : money(balEnd)));
       tb.append(tr);
     }

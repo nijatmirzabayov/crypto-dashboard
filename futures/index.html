@@ -150,10 +150,10 @@ footer{font-size:12.5px;color:var(--muted);display:grid;gap:4px}
 
   <footer>
     <p>Prices are the Binance USDT-margined futures mark price, streamed live and updated every second. If Binance can’t be reached, Bybit or OKX mark prices are used and a notice says so.</p>
-    <p>Balance = starting balance + realised P&amp;L + open P&amp;L. Period gains count trades by their close time; open P&amp;L is counted in the current period. P&amp;L % is the price move times leverage (the return on margin), or the plain price move when no leverage is recorded. Times are shown in your local time zone; weeks start on Monday.</p>
+    <p>Balance = starting balance + realised P&amp;L + open P&amp;L + deposits − withdrawals. Percentages compare against the starting balance plus deposits, so withdrawals don’t count as losses. Period gains count trades by their close time; open P&amp;L is counted in the current period. P&amp;L % is the price move times leverage (the return on margin), or the plain price move when no leverage is recorded. Times are shown in your local time zone; weeks start on Monday.</p>
     <p>Positions come from <code>futures/positions.json</code> in this site's repository. <span id="updated"></span> General information only, not financial advice.</p>
   </footer>
 </div>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

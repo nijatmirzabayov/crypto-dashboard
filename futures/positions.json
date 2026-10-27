@@ -3,8 +3,14 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-27T14:17:00Z",
-  "deposits": [],
+  "updated": "2026-10-27T14:29:00Z",
+  "deposits": [
+    {
+      "time": "2026-10-27",
+      "amount": -300,
+      "note": "Withdrawal"
+    }
+  ],
   "trades": [
     {
       "id": 1,
