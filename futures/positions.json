@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-28T08:46:00Z",
+  "updated": "2026-10-28T08:47:00Z",
   "deposits": [
     {
       "time": "2026-10-27",
@@ -62,16 +62,16 @@
       "id": 4,
       "symbol": "BTWUSDT",
       "side": "short",
-      "size_usdt": 479.8111,
-      "size": 314.213,
+      "size_usdt": 500,
+      "size": 327.434,
       "leverage": null,
       "entry": 1.5270251,
       "opened": "2026-10-27",
       "exit": 1.4850472,
       "closed": "2026-10-27",
-      "fees": 0,
+      "fees": 0.555,
       "funding": 0,
-      "notes": "Size derived from the reported +13.19 profit (about 480 USDT)"
+      "notes": "Price move on 500 USDT gives +13.74; reported realised +13.19, so the 0.56 difference is recorded as fees/funding"
     }
   ]
 }
