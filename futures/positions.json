@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-10-28T08:47:00Z",
+  "updated": "2026-10-28T08:48:00Z",
   "deposits": [
     {
       "time": "2026-10-27",
@@ -72,6 +72,21 @@
       "fees": 0.555,
       "funding": 0,
       "notes": "Price move on 500 USDT gives +13.74; reported realised +13.19, so the 0.56 difference is recorded as fees/funding"
+    },
+    {
+      "id": 5,
+      "symbol": "COLLECTUSDT",
+      "side": "long",
+      "size_usdt": 500,
+      "size": 18867.9245,
+      "leverage": null,
+      "entry": 0.0265,
+      "opened": "2026-10-27",
+      "exit": 0.0269112,
+      "closed": "2026-10-27",
+      "fees": 0.3585,
+      "funding": 0,
+      "notes": "Date assumed Oct 27. Price move on 500 USDT gives +7.76; reported realised +7.40, so the 0.36 difference is recorded as fees/funding"
     }
   ]
 }
