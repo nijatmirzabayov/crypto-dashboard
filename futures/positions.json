@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-11-01T08:24:00Z",
+  "updated": "2026-11-01T09:02:00Z",
   "deposits": [
     {
       "time": "2026-10-27",
@@ -122,6 +122,21 @@
       "fees": 0.3576,
       "funding": 0,
       "notes": "Prices given as 63.5 / 61.52.8 (read as 0.0635 / 0.061528). Price move on 500 USDT gives +15.53; reported realised +15.17, so the 0.36 difference is recorded as fees/funding"
+    },
+    {
+      "id": 8,
+      "symbol": "0GUSDT",
+      "side": "long",
+      "size_usdt": 2000,
+      "size": 1097.0325,
+      "leverage": null,
+      "entry": 1.8231,
+      "opened": "2026-11-01",
+      "exit": 1.84258,
+      "closed": "2026-11-01",
+      "fees": 2.0902,
+      "funding": 0,
+      "notes": "Coin given as \"0\" (read as 0G); close given as 1.8425.8 (read as 1.84258). Price move on 2,000 USDT gives +21.37; reported realised +19.28, so the 2.09 difference is recorded as fees/funding"
     }
   ]
 }
