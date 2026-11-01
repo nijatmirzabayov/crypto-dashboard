@@ -3,7 +3,7 @@
   "currency": "USDT",
   "starting_balance": 764,
   "start_date": "2026-10-20",
-  "updated": "2026-11-01T07:45:00Z",
+  "updated": "2026-11-01T07:46:00Z",
   "deposits": [
     {
       "time": "2026-10-27",
@@ -106,7 +106,7 @@
       "closed": "2026-10-29",
       "fees": 0,
       "funding": 0,
-      "notes": "Size not given; derived from the reported +18.08 profit (about 832 USDT, 495.8 BTW). To be confirmed"
+      "notes": "Size about 832 USDT (495.8 BTW), confirmed by user"
     }
   ]
 }
